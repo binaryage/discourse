@@ -116,6 +116,12 @@ class PostsController < ApplicationController
     else
       DiscourseEvent.trigger(:topic_created, post.topic, params, current_user) unless params[:topic_id]
       DiscourseEvent.trigger(:post_created, post, params, current_user)
+    	require 'hipchat'
+    	if params[:topic_id].blank? then # new topic?
+    	  HipChat::report_event!(current_user, "created-topic", post.topic, post)
+    	else
+    	  HipChat::report_event!(current_user, "created-post", post.topic, post)
+    	end
       post_serializer = PostSerializer.new(post, scope: guardian, root: false)
       post_serializer.draft_sequence = DraftSequence.current(current_user, post.topic.draft_key)
       [true, MultiJson.dump(post_serializer)]
@@ -198,6 +204,8 @@ class PostsController < ApplicationController
     destroyer.destroy
 
     render nothing: true
+    require 'hipchat'
+    HipChat::report_event!(current_user, "deleted-post", post.topic, post)
   end
 
   def expand_embed
@@ -214,6 +222,8 @@ class PostsController < ApplicationController
     post.reload
 
     render_post_json(post)
+    require 'hipchat'
+    HipChat::report_event!(current_user, "recovered-post", post.topic, post)
   end
 
   def destroy_many

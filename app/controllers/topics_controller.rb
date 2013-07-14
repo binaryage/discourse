@@ -260,6 +260,8 @@ class TopicsController < ApplicationController
     PostDestroyer.new(current_user, first_post, { context: params[:context] }).destroy
 
     render nothing: true
+    require 'hipchat'
+    HipChat::report_event!(current_user, "deleted-topic", topic)
   end
 
   def recover
@@ -270,6 +272,8 @@ class TopicsController < ApplicationController
     PostDestroyer.new(current_user, first_post).recover
 
     render nothing: true
+    require 'hipchat'
+    HipChat::report_event!(current_user, "recovered-topic", topic)
   end
 
   def excerpt
